@@ -39,7 +39,7 @@ nav a {
 }
 nav a:hover { color: white; }
 
-/* Container */
+/* Container für Karten */
 .container {
     display: flex;
     flex-wrap: wrap;
@@ -74,7 +74,7 @@ nav a:hover { color: white; }
     box-shadow: 0 0 20px #00ffcc;
 }
 
-/* Ränge */
+/* Team & Ränge */
 .rank {
     background: #1a1a1a;
     margin: 10px 0;
@@ -159,7 +159,7 @@ async function checkServerStatus() {
 // Fake Spieler Liste / Live Rangliste
 function updatePlayerList(players){
     let list = document.getElementById("playerList");
-    list.innerHTML = "";
+    list.innerHTML="";
     if(players.length==0){
         list.innerHTML="<p>Keine Spieler online</p>";
     } else {
@@ -186,6 +186,37 @@ function saveNews(){
     alert("News aktualisiert!");
 }
 
+// Admin Panel Team hinzufügen
+var teamMembers = [];
+function addTeamMember() {
+    var name = document.getElementById("teamName").value;
+    var role = document.getElementById("teamRole").value;
+    var discord = document.getElementById("teamDiscord").value;
+    var avatar = document.getElementById("teamAvatar").value;
+    if(name && role && discord && avatar){
+        teamMembers.push({name:name, role:role, discord:discord, avatar:avatar});
+        updateTeamDisplay();
+        document.getElementById("teamName").value="";
+        document.getElementById("teamRole").value="";
+        document.getElementById("teamDiscord").value="";
+        document.getElementById("teamAvatar").value="";
+        alert("Team-Mitglied hinzugefügt!");
+    } else alert("Bitte alle Felder ausfüllen!");
+}
+
+function updateTeamDisplay(){
+    var container = document.getElementById("teamContainer");
+    container.innerHTML="";
+    teamMembers.forEach(m=>{
+        var div = document.createElement("div");
+        div.className="rank";
+        div.innerHTML = `<img src="${m.avatar}" width="50" height="50" style="border-radius:50%; margin-right:10px; vertical-align:middle;">
+                         <strong>${m.name}</strong> (${m.role})<br>
+                         Discord: ${m.discord}`;
+        container.appendChild(div);
+    });
+}
+
 window.onload=function(){
     if(maintenanceMode){
         document.body.innerHTML="<h1 style='text-align:center;padding:200px'>🚧 Wir sind zurzeit in Wartung!</h1>";
@@ -210,6 +241,7 @@ window.onload=function(){
 </nav>
 
 <div class="container">
+
     <div class="box" id="server">
         <h2>Server Status</h2>
         <p id="status">Status wird geladen...</p>
@@ -235,10 +267,8 @@ window.onload=function(){
     </div>
 
     <div class="box" id="team">
-        <h2>Team</h2>
-        <p>👑 Owner – Dein Name</p>
-        <p>🛠 Admin – Wird gesucht</p>
-        <p>💬 Support – Wird gesucht</p>
+        <h2>Unser Team</h2>
+        <div id="teamContainer">Noch keine Team-Mitglieder eingetragen</div>
     </div>
 
     <div class="box" id="discord">
@@ -261,8 +291,20 @@ window.onload=function(){
 <!-- Admin Panel -->
 <div id="adminPanel">
     <h2>Admin Panel</h2>
+
+    <h3>News bearbeiten</h3>
     <textarea id="newsInput" placeholder="News hier einfügen..."></textarea><br>
     <button onclick="saveNews()">News speichern</button>
+
+    <hr>
+
+    <h3>Team-Mitglieder hinzufügen</h3>
+    <input type="text" id="teamName" placeholder="Name"><br>
+    <input type="text" id="teamRole" placeholder="Rang (Admin, Support, Owner...)"><br>
+    <input type="text" id="teamDiscord" placeholder="Discord ID"><br>
+    <input type="text" id="teamAvatar" placeholder="Profilbild URL"><br>
+    <button onclick="addTeamMember()">Hinzufügen</button>
+
     <button onclick="document.getElementById('adminPanel').style.display='none'">Schließen</button>
 </div>
 
