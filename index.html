@@ -4,41 +4,46 @@
 <meta charset="UTF-8">
 <title>Minora Netzwork</title>
 
+<!-- Partikel Hintergrund -->
 <style>
-body {
+body, html {
     margin: 0;
+    padding: 0;
     font-family: Arial, sans-serif;
-    background: linear-gradient(135deg, #0f0f0f, #1a1a1a);
+    overflow-x: hidden;
+    background: #0d0d0d;
     color: white;
 }
-
-/* NAVIGATION */
+#particles-js {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+}
 nav {
-    background: #000;
+    background: rgba(0,0,0,0.8);
     padding: 15px;
     text-align: center;
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
-
 nav a {
     margin: 0 15px;
-    text-decoration: none;
     color: #00ffcc;
+    text-decoration: none;
     font-weight: bold;
     transition: 0.3s;
 }
+nav a:hover { color: white; }
 
-nav a:hover {
-    color: #fff;
-}
-
-/* SECTIONS */
 .section {
-    padding: 70px 20px;
+    padding: 80px 20px;
     text-align: center;
 }
 
 .box {
-    background: #111;
+    background: rgba(20,20,20,0.85);
     margin: 20px auto;
     padding: 30px;
     max-width: 800px;
@@ -46,7 +51,6 @@ nav a:hover {
     box-shadow: 0 0 20px #00ffcc33;
 }
 
-/* NEON BUTTON */
 .neon-btn {
     display: inline-block;
     padding: 15px 30px;
@@ -57,14 +61,12 @@ nav a:hover {
     text-decoration: none;
     transition: 0.3s;
 }
-
 .neon-btn:hover {
     background: #00ffcc;
     color: black;
     box-shadow: 0 0 20px #00ffcc;
 }
 
-/* RÄNGE */
 .rank {
     background: #1a1a1a;
     margin: 10px;
@@ -78,15 +80,58 @@ footer {
     text-align: center;
     padding: 20px;
 }
+
+/* Admin Panel */
+#adminPanel {
+    display: none;
+    position: fixed;
+    top: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.95);
+    padding: 40px;
+    border-radius: 20px;
+    z-index: 20;
+}
+#adminPanel input, #adminPanel textarea {
+    width: 80%;
+    margin: 10px 0;
+    padding: 10px;
+    border-radius: 5px;
+    border: none;
+}
+#adminPanel button {
+    padding: 10px 20px;
+    margin: 10px;
+    border: none;
+    border-radius: 5px;
+    background: #00ffcc;
+    cursor: pointer;
+}
 </style>
 
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+
 <script>
-// 🔒 WARTUNGSMODUS
+// Admin Passwort (Fake Login)
+var adminPassword = "minora123";
+function showAdmin() {
+    let pw = prompt("Admin Passwort eingeben:");
+    if (pw === adminPassword) {
+        document.getElementById("adminPanel").style.display = "block";
+    } else {
+        alert("Falsches Passwort!");
+    }
+}
+
+// Wartungsmodus
 var maintenanceMode = false;
 
-// 🔴 HIER DEINE SERVER IP EINTRAGEN
+// Server IP hier eintragen
 var serverIP = "deine.server.ip";
 
+// Live Status und MOTD
 async function checkServerStatus() {
     try {
         let response = await fetch("https://api.mcsrvstat.us/2/" + serverIP);
@@ -95,12 +140,30 @@ async function checkServerStatus() {
         if (data.online) {
             document.getElementById("status").innerHTML =
                 "🟢 Online | Spieler: " + data.players.online + "/" + data.players.max;
+            document.getElementById("motd").innerHTML =
+                data.motd.clean.join("<br>");
         } else {
             document.getElementById("status").innerHTML = "🔴 Offline";
+            document.getElementById("motd").innerHTML = "Server ist offline";
         }
     } catch (error) {
         document.getElementById("status").innerHTML = "Status nicht verfügbar";
+        document.getElementById("motd").innerHTML = "";
     }
+}
+
+// Vote System (statisch)
+var votes = 0;
+function voteServer() {
+    votes++;
+    document.getElementById("votes").innerText = votes + " Votes";
+}
+
+// Admin Panel speichern
+function saveNews() {
+    var newsText = document.getElementById("newsInput").value;
+    document.getElementById("newsContent").innerHTML = newsText;
+    alert("News aktualisiert!");
 }
 
 window.onload = function() {
@@ -115,18 +178,23 @@ window.onload = function() {
 </head>
 <body>
 
+<div id="particles-js"></div>
+
 <nav>
     <a href="#server">Server</a>
     <a href="#modi">Spielmodi</a>
     <a href="#raenge">Ränge</a>
     <a href="#team">Team</a>
     <a href="#discord">Discord</a>
+    <a href="javascript:void(0)" onclick="showAdmin()">Admin</a>
 </nav>
 
 <div class="section" id="server">
     <div class="box">
         <h2>Server Status</h2>
         <p id="status">Status wird geladen...</p>
+        <h3>MOTD</h3>
+        <p id="motd"></p>
         <p>IP: Wird noch bekannt gegeben</p>
     </div>
 </div>
@@ -143,12 +211,10 @@ window.onload = function() {
 <div class="section" id="raenge">
     <div class="box">
         <h2>Unsere Ränge</h2>
-
         <div class="rank">💎 VIP</div>
         <div class="rank">🔥 MVP</div>
         <div class="rank">👑 Legend</div>
         <div class="rank">⚡ Ultra</div>
-
     </div>
 </div>
 
@@ -170,9 +236,47 @@ window.onload = function() {
     </div>
 </div>
 
+<div class="section" id="votes">
+    <div class="box">
+        <h2>Vote für unseren Server</h2>
+        <p id="votes">0 Votes</p>
+        <button onclick="voteServer()" class="neon-btn">Vote!</button>
+    </div>
+</div>
+
+<div class="section" id="news">
+    <div class="box">
+        <h2>News</h2>
+        <div id="newsContent">Noch keine News</div>
+    </div>
+</div>
+
+<!-- Admin Panel -->
+<div id="adminPanel">
+    <h2>Admin Panel</h2>
+    <textarea id="newsInput" placeholder="News hier einfügen..."></textarea><br>
+    <button onclick="saveNews()">News speichern</button>
+    <button onclick="document.getElementById('adminPanel').style.display='none'">Schließen</button>
+</div>
+
 <footer>
 © 2026 Minora Netzwork
 </footer>
+
+<script>
+// Partikel.js Konfiguration
+particlesJS("particles-js", {
+  "particles": {
+    "number": {"value": 80},
+    "color": {"value": "#00ffcc"},
+    "shape": {"type": "circle"},
+    "opacity": {"value": 0.5},
+    "size": {"value": 3},
+    "line_linked": {"enable": true, "distance": 150, "color": "#00ffcc", "opacity":0.4,"width":1},
+    "move": {"enable": true,"speed":2}
+  }
+});
+</script>
 
 </body>
 </html>
