@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <title>Minora Netzwork</title>
 
-<!-- Styles -->
 <style>
 body, html {
     margin: 0;
@@ -21,7 +20,7 @@ body, html {
     z-index: -1;
 }
 
-/* Navigation */
+/* Navigation / Tabs */
 nav {
     background: rgba(0,0,0,0.85);
     padding: 15px;
@@ -36,26 +35,30 @@ nav a {
     text-decoration: none;
     font-weight: bold;
     transition: 0.3s;
+    cursor: pointer;
 }
-nav a:hover { color: white; }
+nav a.active, nav a:hover {
+    color: white;
+}
 
-/* Container für Karten */
+/* Container */
 .container {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
     padding: 60px 20px;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
     gap: 20px;
 }
 
-/* Box/Card */
+/* Box / Card */
 .box {
     background: rgba(20,20,20,0.85);
     padding: 25px;
-    width: 300px;
+    width: 700px;
     border-radius: 15px;
     box-shadow: 0 0 20px #00ffcc33;
     text-align: center;
+    display: none; /* Tabs verstecken */
 }
 
 .neon-btn {
@@ -74,7 +77,6 @@ nav a:hover { color: white; }
     box-shadow: 0 0 20px #00ffcc;
 }
 
-/* Team & Ränge */
 .rank {
     background: #1a1a1a;
     margin: 10px 0;
@@ -118,7 +120,6 @@ footer {
 }
 </style>
 
-<!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
 <script>
 // Admin Passwort
@@ -136,7 +137,20 @@ var maintenanceMode = false;
 // Server IP
 var serverIP = "deine.server.ip";
 
-// Live Status & MOTD
+// Tabs
+function openTab(tabId, element){
+    // Alle Tabs verstecken
+    let boxes = document.querySelectorAll('.box');
+    boxes.forEach(b=>b.style.display='none');
+    // Aktiven Tab anzeigen
+    document.getElementById(tabId).style.display='block';
+    // Aktive Nav markieren
+    let links = document.querySelectorAll('nav a');
+    links.forEach(l=>l.classList.remove('active'));
+    element.classList.add('active');
+}
+
+// Live Status + MOTD
 async function checkServerStatus() {
     try {
         let response = await fetch("https://api.mcsrvstat.us/2/" + serverIP);
@@ -156,7 +170,7 @@ async function checkServerStatus() {
     }
 }
 
-// Fake Spieler Liste / Live Rangliste
+// Live Spieler Rangliste
 function updatePlayerList(players){
     let list = document.getElementById("playerList");
     list.innerHTML="";
@@ -179,14 +193,14 @@ function voteServer(){
     document.getElementById("votes").innerText=votes+" Votes";
 }
 
-// Admin Panel News speichern
+// News System
 function saveNews(){
     var newsText=document.getElementById("newsInput").value;
     document.getElementById("newsContent").innerHTML=newsText;
     alert("News aktualisiert!");
 }
 
-// Admin Panel Team hinzufügen
+// Team Admin
 var teamMembers = [];
 function addTeamMember() {
     var name = document.getElementById("teamName").value;
@@ -194,7 +208,7 @@ function addTeamMember() {
     var discord = document.getElementById("teamDiscord").value;
     var avatar = document.getElementById("teamAvatar").value;
     if(name && role && discord && avatar){
-        teamMembers.push({name:name, role:role, discord:discord, avatar:avatar});
+        teamMembers.push({name,name, role, discord, avatar});
         updateTeamDisplay();
         document.getElementById("teamName").value="";
         document.getElementById("teamRole").value="";
@@ -203,12 +217,11 @@ function addTeamMember() {
         alert("Team-Mitglied hinzugefügt!");
     } else alert("Bitte alle Felder ausfüllen!");
 }
-
 function updateTeamDisplay(){
-    var container = document.getElementById("teamContainer");
+    let container = document.getElementById("teamContainer");
     container.innerHTML="";
     teamMembers.forEach(m=>{
-        var div = document.createElement("div");
+        let div = document.createElement("div");
         div.className="rank";
         div.innerHTML = `<img src="${m.avatar}" width="50" height="50" style="border-radius:50%; margin-right:10px; vertical-align:middle;">
                          <strong>${m.name}</strong> (${m.role})<br>
@@ -217,31 +230,34 @@ function updateTeamDisplay(){
     });
 }
 
+// Beim Laden
 window.onload=function(){
     if(maintenanceMode){
         document.body.innerHTML="<h1 style='text-align:center;padding:200px'>🚧 Wir sind zurzeit in Wartung!</h1>";
     } else {
         checkServerStatus();
+        // Standard Tab öffnen
+        document.querySelector('nav a').click();
     }
 }
 </script>
-
 </head>
 <body>
 
 <div id="particles-js"></div>
 
 <nav>
-<a href="#server">Server</a>
-<a href="#modi">Spielmodi</a>
-<a href="#raenge">Ränge</a>
-<a href="#team">Team</a>
-<a href="#discord">Discord</a>
-<a href="javascript:void(0)" onclick="showAdmin()">Admin</a>
+<a onclick="openTab('server', this)">Server</a>
+<a onclick="openTab('modi', this)">Spielmodi</a>
+<a onclick="openTab('raenge', this)">Ränge</a>
+<a onclick="openTab('team', this)">Team</a>
+<a onclick="openTab('discord', this)">Discord</a>
+<a onclick="openTab('votes', this)">Vote</a>
+<a onclick="openTab('news', this)">News</a>
+<a onclick="showAdmin()">Admin</a>
 </nav>
 
 <div class="container">
-
     <div class="box" id="server">
         <h2>Server Status</h2>
         <p id="status">Status wird geladen...</p>
@@ -267,7 +283,7 @@ window.onload=function(){
     </div>
 
     <div class="box" id="team">
-        <h2>Unser Team</h2>
+        <h2>Team</h2>
         <div id="teamContainer">Noch keine Team-Mitglieder eingetragen</div>
     </div>
 
