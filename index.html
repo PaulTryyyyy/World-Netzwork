@@ -4,15 +4,15 @@
 <meta charset="UTF-8">
 <title>Minora Netzwork</title>
 
-<!-- Partikel Hintergrund -->
+<!-- Styles -->
 <style>
 body, html {
     margin: 0;
     padding: 0;
     font-family: Arial, sans-serif;
-    overflow-x: hidden;
     background: #0d0d0d;
     color: white;
+    overflow-x: hidden;
 }
 #particles-js {
     position: fixed;
@@ -20,8 +20,10 @@ body, html {
     height: 100%;
     z-index: -1;
 }
+
+/* Navigation */
 nav {
-    background: rgba(0,0,0,0.8);
+    background: rgba(0,0,0,0.85);
     padding: 15px;
     text-align: center;
     position: sticky;
@@ -37,24 +39,29 @@ nav a {
 }
 nav a:hover { color: white; }
 
-.section {
-    padding: 80px 20px;
-    text-align: center;
+/* Container */
+.container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 60px 20px;
+    gap: 20px;
 }
 
+/* Box/Card */
 .box {
     background: rgba(20,20,20,0.85);
-    margin: 20px auto;
-    padding: 30px;
-    max-width: 800px;
+    padding: 25px;
+    width: 300px;
     border-radius: 15px;
     box-shadow: 0 0 20px #00ffcc33;
+    text-align: center;
 }
 
 .neon-btn {
     display: inline-block;
-    padding: 15px 30px;
-    margin: 15px;
+    padding: 15px 25px;
+    margin: 10px 0;
     color: #00ffcc;
     border: 2px solid #00ffcc;
     border-radius: 10px;
@@ -67,18 +74,13 @@ nav a:hover { color: white; }
     box-shadow: 0 0 20px #00ffcc;
 }
 
+/* Ränge */
 .rank {
     background: #1a1a1a;
-    margin: 10px;
-    padding: 15px;
+    margin: 10px 0;
+    padding: 10px;
     border-radius: 10px;
     box-shadow: 0 0 10px #00ffcc55;
-}
-
-footer {
-    background: #000;
-    text-align: center;
-    padding: 20px;
 }
 
 /* Admin Panel */
@@ -108,67 +110,85 @@ footer {
     background: #00ffcc;
     cursor: pointer;
 }
+
+footer {
+    background: #000;
+    text-align: center;
+    padding: 20px;
+}
 </style>
 
 <!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
-
 <script>
-// Admin Passwort (Fake Login)
+// Admin Passwort
 var adminPassword = "minora123";
 function showAdmin() {
     let pw = prompt("Admin Passwort eingeben:");
-    if (pw === adminPassword) {
-        document.getElementById("adminPanel").style.display = "block";
-    } else {
-        alert("Falsches Passwort!");
-    }
+    if(pw === adminPassword){
+        document.getElementById("adminPanel").style.display="block";
+    } else alert("Falsches Passwort!");
 }
 
 // Wartungsmodus
 var maintenanceMode = false;
 
-// Server IP hier eintragen
+// Server IP
 var serverIP = "deine.server.ip";
 
-// Live Status und MOTD
+// Live Status & MOTD
 async function checkServerStatus() {
     try {
         let response = await fetch("https://api.mcsrvstat.us/2/" + serverIP);
         let data = await response.json();
-
-        if (data.online) {
+        if(data.online){
             document.getElementById("status").innerHTML =
-                "🟢 Online | Spieler: " + data.players.online + "/" + data.players.max;
-            document.getElementById("motd").innerHTML =
-                data.motd.clean.join("<br>");
+                "🟢 Online | Spieler: "+data.players.online+"/"+data.players.max;
+            document.getElementById("motd").innerHTML = data.motd.clean.join("<br>");
+            updatePlayerList(data.players.sample || []);
         } else {
-            document.getElementById("status").innerHTML = "🔴 Offline";
-            document.getElementById("motd").innerHTML = "Server ist offline";
+            document.getElementById("status").innerHTML="🔴 Offline";
+            document.getElementById("motd").innerHTML="Server ist offline";
+            updatePlayerList([]);
         }
-    } catch (error) {
-        document.getElementById("status").innerHTML = "Status nicht verfügbar";
-        document.getElementById("motd").innerHTML = "";
+    } catch(err){
+        document.getElementById("status").innerHTML="Status nicht verfügbar";
     }
 }
 
-// Vote System (statisch)
-var votes = 0;
-function voteServer() {
-    votes++;
-    document.getElementById("votes").innerText = votes + " Votes";
+// Fake Spieler Liste / Live Rangliste
+function updatePlayerList(players){
+    let list = document.getElementById("playerList");
+    list.innerHTML = "";
+    if(players.length==0){
+        list.innerHTML="<p>Keine Spieler online</p>";
+    } else {
+        players.forEach(p=>{
+            let div = document.createElement("div");
+            div.className="rank";
+            div.innerText=p.name+" ("+Math.floor(Math.random()*10+1)+" Level)";
+            list.appendChild(div);
+        });
+    }
 }
 
-// Admin Panel speichern
-function saveNews() {
-    var newsText = document.getElementById("newsInput").value;
-    document.getElementById("newsContent").innerHTML = newsText;
+// Vote System
+var votes = 0;
+function voteServer(){
+    votes++;
+    document.getElementById("votes").innerText=votes+" Votes";
+}
+
+// Admin Panel News speichern
+function saveNews(){
+    var newsText=document.getElementById("newsInput").value;
+    document.getElementById("newsContent").innerHTML=newsText;
     alert("News aktualisiert!");
 }
 
-window.onload = function() {
-    if (maintenanceMode) {
-        document.body.innerHTML = "<h1 style='text-align:center;padding:200px'>🚧 Wir sind zurzeit in Wartung!</h1>";
+window.onload=function(){
+    if(maintenanceMode){
+        document.body.innerHTML="<h1 style='text-align:center;padding:200px'>🚧 Wir sind zurzeit in Wartung!</h1>";
     } else {
         checkServerStatus();
     }
@@ -181,71 +201,58 @@ window.onload = function() {
 <div id="particles-js"></div>
 
 <nav>
-    <a href="#server">Server</a>
-    <a href="#modi">Spielmodi</a>
-    <a href="#raenge">Ränge</a>
-    <a href="#team">Team</a>
-    <a href="#discord">Discord</a>
-    <a href="javascript:void(0)" onclick="showAdmin()">Admin</a>
+<a href="#server">Server</a>
+<a href="#modi">Spielmodi</a>
+<a href="#raenge">Ränge</a>
+<a href="#team">Team</a>
+<a href="#discord">Discord</a>
+<a href="javascript:void(0)" onclick="showAdmin()">Admin</a>
 </nav>
 
-<div class="section" id="server">
-    <div class="box">
+<div class="container">
+    <div class="box" id="server">
         <h2>Server Status</h2>
         <p id="status">Status wird geladen...</p>
         <h3>MOTD</h3>
         <p id="motd"></p>
-        <p>IP: Wird noch bekannt gegeben</p>
+        <h3>Live Spieler Rangliste</h3>
+        <div id="playerList"></div>
     </div>
-</div>
 
-<div class="section" id="modi">
-    <div class="box">
+    <div class="box" id="modi">
         <h2>Spielmodi</h2>
         <p>🏙 CityBuild</p>
         <p>🌍 SMP (Kommt noch)</p>
         <p>🚀 Weitere kommen bald...</p>
     </div>
-</div>
 
-<div class="section" id="raenge">
-    <div class="box">
+    <div class="box" id="raenge">
         <h2>Unsere Ränge</h2>
         <div class="rank">💎 VIP</div>
         <div class="rank">🔥 MVP</div>
         <div class="rank">👑 Legend</div>
         <div class="rank">⚡ Ultra</div>
     </div>
-</div>
 
-<div class="section" id="team">
-    <div class="box">
-        <h2>Unser Team</h2>
+    <div class="box" id="team">
+        <h2>Team</h2>
         <p>👑 Owner – Dein Name</p>
         <p>🛠 Admin – Wird gesucht</p>
         <p>💬 Support – Wird gesucht</p>
     </div>
-</div>
 
-<div class="section" id="discord">
-    <div class="box">
+    <div class="box" id="discord">
         <h2>Discord Community</h2>
-        <a href="https://discord.gg/kp4ghTPZWU" target="_blank" class="neon-btn">
-            💬 Jetzt Discord beitreten
-        </a>
+        <a href="https://discord.gg/kp4ghTPZWU" target="_blank" class="neon-btn">💬 Jetzt Discord beitreten</a>
     </div>
-</div>
 
-<div class="section" id="votes">
-    <div class="box">
+    <div class="box" id="votes">
         <h2>Vote für unseren Server</h2>
         <p id="votes">0 Votes</p>
         <button onclick="voteServer()" class="neon-btn">Vote!</button>
     </div>
-</div>
 
-<div class="section" id="news">
-    <div class="box">
+    <div class="box" id="news">
         <h2>News</h2>
         <div id="newsContent">Noch keine News</div>
     </div>
@@ -264,7 +271,7 @@ window.onload = function() {
 </footer>
 
 <script>
-// Partikel.js Konfiguration
+// Partikel Hintergrund
 particlesJS("particles-js", {
   "particles": {
     "number": {"value": 80},
