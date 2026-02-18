@@ -58,7 +58,7 @@ nav a.active, nav a:hover {
     border-radius: 15px;
     box-shadow: 0 0 20px #00ffcc33;
     text-align: center;
-    display: none; /* Tabs verstecken */
+    display: none;
 }
 
 .neon-btn {
@@ -77,13 +77,21 @@ nav a.active, nav a:hover {
     box-shadow: 0 0 20px #00ffcc;
 }
 
+/* Team & Ränge */
 .rank {
-    background: #1a1a1a;
     margin: 10px 0;
     padding: 10px;
     border-radius: 10px;
-    box-shadow: 0 0 10px #00ffcc55;
+    color: white;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
+.rank.VIP { background:#8bc34a; }
+.rank.MVP { background:#2196f3; }
+.rank.Admin { background:#f44336; }
+.rank.Owner { background:#ff9800; }
 
 /* Admin Panel */
 #adminPanel {
@@ -113,6 +121,26 @@ nav a.active, nav a:hover {
     cursor: pointer;
 }
 
+/* Spieler Stats Popup */
+#playerStats {
+    display:none;
+    position:fixed;
+    top:50%;
+    left:50%;
+    transform:translate(-50%, -50%);
+    background: rgba(20,20,20,0.95);
+    padding:30px;
+    border-radius:20px;
+    z-index:30;
+}
+#playerStats button {
+    margin-top:15px;
+    padding:10px 20px;
+    background:#00ffcc;
+    border:none;
+    border-radius:5px;
+    cursor:pointer;
+}
 footer {
     background: #000;
     text-align: center;
@@ -139,12 +167,9 @@ var serverIP = "deine.server.ip";
 
 // Tabs
 function openTab(tabId, element){
-    // Alle Tabs verstecken
     let boxes = document.querySelectorAll('.box');
     boxes.forEach(b=>b.style.display='none');
-    // Aktiven Tab anzeigen
     document.getElementById(tabId).style.display='block';
-    // Aktive Nav markieren
     let links = document.querySelectorAll('nav a');
     links.forEach(l=>l.classList.remove('active'));
     element.classList.add('active');
@@ -170,27 +195,41 @@ async function checkServerStatus() {
     }
 }
 
-// Live Spieler Rangliste
+// Live Spieler anklickbar
+var playerData = []; // Beispiel: [{name:"Spieler1", kills:5, deaths:2, time:"1h 20m", uuid:"..."}, ...]
 function updatePlayerList(players){
     let list = document.getElementById("playerList");
     list.innerHTML="";
+    playerData = []; // Reset
     if(players.length==0){
         list.innerHTML="<p>Keine Spieler online</p>";
     } else {
         players.forEach(p=>{
+            let kills=Math.floor(Math.random()*10);
+            let deaths=Math.floor(Math.random()*5);
+            let time=Math.floor(Math.random()*120)+"m";
+            playerData.push({name:p.name,kills,deaths,time,uuid:p.id || ""});
             let div = document.createElement("div");
-            div.className="rank";
-            div.innerText=p.name+" ("+Math.floor(Math.random()*10+1)+" Level)";
+            div.className="rank VIP"; // Standardfarbe
+            div.style.cursor="pointer";
+            div.innerHTML = `<img src="https://crafatar.com/avatars/${p.id || p.name}?size=50" width="50" height="50" style="border-radius:50%;"> ${p.name}`;
+            div.onclick = ()=>showPlayerStats(p.name);
             list.appendChild(div);
         });
     }
 }
 
-// Vote System
-var votes = 0;
-function voteServer(){
-    votes++;
-    document.getElementById("votes").innerText=votes+" Votes";
+// Spieler Stats Popup
+function showPlayerStats(name){
+    let p = playerData.find(pl=>pl.name===name);
+    if(!p) return;
+    let stats = document.getElementById("playerStats");
+    stats.innerHTML = `<h2>${p.name}</h2>
+                       <p>Kills: ${p.kills}</p>
+                       <p>Tode: ${p.deaths}</p>
+                       <p>Spielzeit: ${p.time}</p>
+                       <button onclick="document.getElementById('playerStats').style.display='none'">Schließen</button>`;
+    stats.style.display='block';
 }
 
 // News System
@@ -206,24 +245,22 @@ function addTeamMember() {
     var name = document.getElementById("teamName").value;
     var role = document.getElementById("teamRole").value;
     var discord = document.getElementById("teamDiscord").value;
-    var avatar = document.getElementById("teamAvatar").value;
-    if(name && role && discord && avatar){
-        teamMembers.push({name,name, role, discord, avatar});
-        updateTeamDisplay();
-        document.getElementById("teamName").value="";
-        document.getElementById("teamRole").value="";
-        document.getElementById("teamDiscord").value="";
-        document.getElementById("teamAvatar").value="";
-        alert("Team-Mitglied hinzugefügt!");
-    } else alert("Bitte alle Felder ausfüllen!");
+    if(!name || !role || !discord){alert("Bitte alle Felder ausfüllen!"); return;}
+    let colorClass = role.replace(/\s/g,"");
+    teamMembers.push({name,role,discord,colorClass});
+    updateTeamDisplay();
+    document.getElementById("teamName").value="";
+    document.getElementById("teamRole").value="";
+    document.getElementById("teamDiscord").value="";
+    alert("Team-Mitglied hinzugefügt!");
 }
 function updateTeamDisplay(){
     let container = document.getElementById("teamContainer");
     container.innerHTML="";
     teamMembers.forEach(m=>{
         let div = document.createElement("div");
-        div.className="rank";
-        div.innerHTML = `<img src="${m.avatar}" width="50" height="50" style="border-radius:50%; margin-right:10px; vertical-align:middle;">
+        div.className="rank "+m.colorClass;
+        div.innerHTML = `<img src="https://cdn.discordapp.com/avatars/${m.discord}/avatar.png?size=50" width="50" height="50" style="border-radius:50%;">
                          <strong>${m.name}</strong> (${m.role})<br>
                          Discord: ${m.discord}`;
         container.appendChild(div);
@@ -236,7 +273,6 @@ window.onload=function(){
         document.body.innerHTML="<h1 style='text-align:center;padding:200px'>🚧 Wir sind zurzeit in Wartung!</h1>";
     } else {
         checkServerStatus();
-        // Standard Tab öffnen
         document.querySelector('nav a').click();
     }
 }
@@ -252,77 +288,74 @@ window.onload=function(){
 <a onclick="openTab('raenge', this)">Ränge</a>
 <a onclick="openTab('team', this)">Team</a>
 <a onclick="openTab('discord', this)">Discord</a>
-<a onclick="openTab('votes', this)">Vote</a>
 <a onclick="openTab('news', this)">News</a>
 <a onclick="showAdmin()">Admin</a>
 </nav>
 
 <div class="container">
-    <div class="box" id="server">
-        <h2>Server Status</h2>
-        <p id="status">Status wird geladen...</p>
-        <h3>MOTD</h3>
-        <p id="motd"></p>
-        <h3>Live Spieler Rangliste</h3>
-        <div id="playerList"></div>
-    </div>
 
-    <div class="box" id="modi">
-        <h2>Spielmodi</h2>
-        <p>🏙 CityBuild</p>
-        <p>🌍 SMP (Kommt noch)</p>
-        <p>🚀 Weitere kommen bald...</p>
-    </div>
+<div class="box" id="server">
+<h2>Server Status</h2>
+<p id="status">Status wird geladen...</p>
+<h3>MOTD</h3>
+<p id="motd"></p>
+<h3>Live Spieler Rangliste</h3>
+<div id="playerList"></div>
+</div>
 
-    <div class="box" id="raenge">
-        <h2>Unsere Ränge</h2>
-        <div class="rank">💎 VIP</div>
-        <div class="rank">🔥 MVP</div>
-        <div class="rank">👑 Legend</div>
-        <div class="rank">⚡ Ultra</div>
-    </div>
+<div class="box" id="modi">
+<h2>Spielmodi</h2>
+<p>🏙 CityBuild</p>
+<p>🌍 SMP (Kommt noch)</p>
+<p>🚀 Weitere kommen bald...</p>
+</div>
 
-    <div class="box" id="team">
-        <h2>Team</h2>
-        <div id="teamContainer">Noch keine Team-Mitglieder eingetragen</div>
-    </div>
+<div class="box" id="raenge">
+<h2>Unsere Ränge</h2>
+<div class="rank VIP">💎 VIP</div>
+<div class="rank MVP">🔥 MVP</div>
+<div class="rank Admin">🛠 Admin</div>
+<div class="rank Owner">👑 Owner</div>
+</div>
 
-    <div class="box" id="discord">
-        <h2>Discord Community</h2>
-        <a href="https://discord.gg/kp4ghTPZWU" target="_blank" class="neon-btn">💬 Jetzt Discord beitreten</a>
-    </div>
+<div class="box" id="team">
+<h2>Team</h2>
+<div id="teamContainer">Noch keine Team-Mitglieder eingetragen</div>
+</div>
 
-    <div class="box" id="votes">
-        <h2>Vote für unseren Server</h2>
-        <p id="votes">0 Votes</p>
-        <button onclick="voteServer()" class="neon-btn">Vote!</button>
-    </div>
+<div class="box" id="discord">
+<h2>Discord Community</h2>
+<a href="https://discord.gg/kp4ghTPZWU" target="_blank" class="neon-btn">💬 Jetzt Discord beitreten</a>
+</div>
 
-    <div class="box" id="news">
-        <h2>News</h2>
-        <div id="newsContent">Noch keine News</div>
-    </div>
+<div class="box" id="news">
+<h2>News</h2>
+<div id="newsContent">Noch keine News</div>
+</div>
+
 </div>
 
 <!-- Admin Panel -->
 <div id="adminPanel">
-    <h2>Admin Panel</h2>
+<h2>Admin Panel</h2>
 
-    <h3>News bearbeiten</h3>
-    <textarea id="newsInput" placeholder="News hier einfügen..."></textarea><br>
-    <button onclick="saveNews()">News speichern</button>
+<h3>News bearbeiten</h3>
+<textarea id="newsInput" placeholder="News hier einfügen..."></textarea><br>
+<button onclick="saveNews()">News speichern</button>
 
-    <hr>
+<hr>
 
-    <h3>Team-Mitglieder hinzufügen</h3>
-    <input type="text" id="teamName" placeholder="Name"><br>
-    <input type="text" id="teamRole" placeholder="Rang (Admin, Support, Owner...)"><br>
-    <input type="text" id="teamDiscord" placeholder="Discord ID"><br>
-    <input type="text" id="teamAvatar" placeholder="Profilbild URL"><br>
-    <button onclick="addTeamMember()">Hinzufügen</button>
+<h3>Team-Mitglieder hinzufügen</h3>
+<input type="text" id="teamName" placeholder="Name"><br>
+<input type="text" id="teamRole" placeholder="Rang (VIP, Admin, Owner...)"><br>
+<input type="text" id="teamDiscord" placeholder="Discord-ID"><br>
+<button onclick="addTeamMember()">Hinzufügen</button>
 
-    <button onclick="document.getElementById('adminPanel').style.display='none'">Schließen</button>
+<button onclick="document.getElementById('adminPanel').style.display='none'">Schließen</button>
 </div>
+
+<!-- Spieler Stats Popup -->
+<div id="playerStats"></div>
 
 <footer>
 © 2026 Minora Netzwork
